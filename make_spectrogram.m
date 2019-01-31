@@ -1,13 +1,20 @@
 %% Make spectrogram
 
-load WP11_1_1.mat
+load ASHMI_EEG.mat
+train_X = train.train_X;
+train_Y = train.train_Y;
 
-ECG = PHYS.data256.ECG;
+%%
+%Pick out one training example of 30 s
+train_X_1 = train_X(1,1:30*256);
 
-epoch = 2.5*60*256;
+%%
+% Uses 2 second windows with 1 sec overlap
+
+s = spectrogram(train_X_1,2*256,1*256);
+
+%%
 
 figure(1)
-spectrogram(ECG(5000:5000+epoch))
+spectrogram(train_X_1,2*256,1*256)
 
-figure(2)
-spectrogram(ECG(20000:20000+epoch))
