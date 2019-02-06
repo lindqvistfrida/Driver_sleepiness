@@ -44,8 +44,8 @@ train_Y_2 = np.array(train_Y_2)
 train_Y_2 = train_Y_2.astype('float32')
 
 import h5py
-with h5py.File('train_X2_2.mat', 'r') as file:
-    train_X_1 = list(file['train_X2_2'])
+with h5py.File('train_X2_1.mat', 'r') as file:
+    train_X_1 = list(file['train_X2_1'])
     
 import numpy as np 
 train_X_1 = np.array(train_X_1)  
