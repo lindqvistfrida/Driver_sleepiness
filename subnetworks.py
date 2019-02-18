@@ -32,7 +32,7 @@ test_X_EOG = np.transpose(test_X_EOG)
 test_X_EOG = test_X_EOG.astype('float32')
 
 
-file = h5py_.File('test_Y_sub_30_ECG.mat', 'r')
+file = h5py_.File('test_Y_sub_30_5classes.mat', 'r')
 test_Y = file['test_Y']
     
 test_Y = np.array(test_Y)  
@@ -64,7 +64,7 @@ train_X_EOG = np.array(train_X_EOG)
 train_X_EOG = np.transpose(train_X_EOG)
 train_X_EOG = train_X_EOG.astype('float32')
 
-file = h5py_.File('train_Y_sub_30_ECG.mat', 'r')
+file = h5py_.File('train_Y_sub_30_5classes.mat', 'r')
 train_Y = file['train_Y']
     
 train_Y = np.array(train_Y)  
@@ -98,10 +98,10 @@ import numpy as np
 import keras
 from keras.optimizers import SGD
 from keras.models import Sequential, Model
-from keras.layers import Activation, Dense, Dropout, Flatten, Input, Concatenate, Conv1D, MaxPooling1D, LSTM
+from keras.layers import Activation, Dense, Dropout, Flatten, Input, Concatenate, Conv1D, MaxPooling1D, LSTM, BatchNormalization
 
 batch_size = 64
-epochs = 10
+epochs = 1
 
 inp1 = Input(shape=train_X_ECG.shape[1:])
 inp2 = Input(shape=train_X_EEG.shape[1:])
@@ -111,18 +111,38 @@ conv1 = Conv1D(64, 3, activation='relu',input_shape=(7680,1))(inp1)
 conv2 = Conv1D(64, 3, activation='relu',input_shape=(7680,1))(inp2)
 conv3 = Conv1D(64, 3, activation='relu',input_shape=(7680,1))(inp3)
 
-maxp1 = MaxPooling1D(3)(conv1)
-maxp2 = MaxPooling1D(3)(conv2)
-maxp3 = MaxPooling1D(3)(conv3)
+BN1 = BatchNormalization()(conv1)
+BN2 = BatchNormalization()(conv2)
+BN3 = BatchNormalization()(conv3)
+
+conv11 = Conv1D(64, 3, activation='relu')(BN1)
+conv12 = Conv1D(64, 3, activation='relu')(BN2)
+conv13 = Conv1D(64, 3, activation='relu')(BN3)
+
+maxp11 = MaxPooling1D(2)(conv11)
+maxp12 = MaxPooling1D(2)(conv12)
+maxp13 = MaxPooling1D(2)(conv13)
+
+DO1 = Dropout(0.25)(maxp11)
+DO2 = Dropout(0.25)(maxp11)
+DO3 = Dropout(0.25)(maxp11)
+
+conv21 = Conv1D(64, 3, activation='relu')(DO1)
+conv22 = Conv1D(64, 3, activation='relu')(DO2)
+conv23 = Conv1D(64, 3, activation='relu')(DO3)
+
+maxp21 = MaxPooling1D(2)(conv21)
+maxp22 = MaxPooling1D(2)(conv22)
+maxp23 = MaxPooling1D(2)(conv23)
 
 #flt1 = Flatten()(maxp1)
 #flt2 = Flatten()(maxp2)
 #flt3 = Flatten()(maxp3)
 
-mrg = Concatenate(axis=-1)([maxp1,maxp2,maxp3])
+mrg = Concatenate(axis=-1)([maxp21,maxp22,maxp23])
 lstm = LSTM(10)(mrg)
-dense = Dense(256, activation='relu')(lstm)
-op = Dense(10, activation='softmax')(lstm)
+#dense = Dense(256, activation='relu')(mrg)
+op = Dense(6, activation='softmax')(lstm)
 model = Model(inputs=[inp1, inp2, inp3], outputs=op)
 
 print(model.summary())
